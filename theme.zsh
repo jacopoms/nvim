@@ -9,7 +9,7 @@
 export THEME_MODE="$("$HOME/bin/theme-mode" 2>/dev/null || echo dark)"
 
 if [[ "$THEME_MODE" == "light" ]]; then
-  export BAT_THEME="Solarized (light)"
+  export BAT_THEME="OneHalfLight"
 else
   export BAT_THEME="Dracula"
 fi
@@ -29,6 +29,10 @@ if [[ "$THEME_MODE" == "light" ]]; then
 else
   export OMP_CONFIG="$HOME/dotfiles/myjan.omp.json"
 fi
+
+# k9s only reads its skin at startup, so keep ~/.k9s/config.yaml's ui.skin
+# in sync with every new shell — the next `k9s` launch will pick it up.
+"$HOME/bin/theme-apply-k9s.sh" 2>/dev/null
 
 # `theme light|dark|auto` — switch now (this shell + live tmux status bar) and
 # persist the choice to ~/.env so new shells/panes/windows pick it up too.
@@ -61,6 +65,7 @@ theme() {
   fi
 
   [[ -n "$TMUX" ]] && "$HOME/bin/theme-apply-tmux.sh"
+  "$HOME/bin/theme-apply-k9s.sh" 2>/dev/null
 
-  echo "Theme set to $THEME_MODE (mode: ${1}). Ghostty follows macOS appearance directly (no manual override); open a new nvim/wezterm window to pick up the change there."
+  echo "Theme set to $THEME_MODE (mode: ${1}). Ghostty follows macOS appearance directly (no manual override); open a new nvim/wezterm/k9s window to pick up the change there."
 }

@@ -42,7 +42,7 @@ return {
     lazy = true,
     priority = 1000,
     opts = {
-      flavor = "macchiato", -- latte, frappe, macchiato, mocha
+      flavor = "latte", -- latte, frappe, macchiato, mocha
       neo_tree = true,
       blink_cmp = true,
       snacks = {
@@ -128,7 +128,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = (vim.env.THEME_MODE == "light") and "onelight" or "dracula",
+      colorscheme = (vim.env.THEME_MODE == "light") and "catppuccin-latte" or "dracula",
     },
   },
 }
