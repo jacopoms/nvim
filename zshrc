@@ -6,12 +6,6 @@
 # Early Initialization (must be first)
 # ----------------------------------------------------------------------------
 [[ -f "$HOME/.env" ]] && source "$HOME/.env"
-# Cursor agent shell-integration hooks zsh so failed commands (even typos like `adsdsa`)
-# surface a "press enter to fix" UI that often ignores Enter; it affects every non-zero exit.
-# Opt in when a Cursor build fixes it: put `export CURSOR_SHELL_INTEGRATION=1` in ~/.env
-# if [[ -x "$HOME/.local/bin/agent" ]]; then
-#   eval "$(~/.local/bin/agent shell-integration zsh)"
-# fi
 
 # Disable terminal-specific shell integration inside tmux — these inject escape
 # sequences that conflict with tmux's own terminal management and cause pane
@@ -41,11 +35,17 @@ if [[ -n "$TMUX" ]]; then
 fi
 
 # ----------------------------------------------------------------------------
-# Architecture Detection
+# Package Manager Prefix Configuration (MacPorts vs Homebrew)
 # ----------------------------------------------------------------------------
-if [[ "$(uname -m)" == "arm64" ]]; then
+# Check MacPorts first (/opt/local), then Homebrew (/opt/homebrew or /usr/local)
+if [[ -x "/opt/local/bin/port" ]]; then
+  PACKAGE_MANAGER="macports"
+  MACPORTS_PREFIX="/opt/local"
+elif [[ "$(uname -m)" == "arm64" && -x "/opt/homebrew/bin/brew" ]]; then
+  PACKAGE_MANAGER="homebrew"
   HOMEBREW_PREFIX="/opt/homebrew"
-else
+elif [[ -x "/usr/local/bin/brew" ]]; then
+  PACKAGE_MANAGER="homebrew"
   HOMEBREW_PREFIX="/usr/local"
 fi
 
@@ -76,17 +76,32 @@ path=(
   $path  # Keep existing PATH entries
 )
 
-# Homebrew PATH (arch-specific prefix set above)
-path=("$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin" $path)
+# Package Manager PATH (MacPorts or Homebrew)
+if [[ "$PACKAGE_MANAGER" == "macports" ]]; then
+  path=("$MACPORTS_PREFIX/bin" "$MACPORTS_PREFIX/sbin" $path)
+elif [[ "$PACKAGE_MANAGER" == "homebrew" ]]; then
+  path=("$HOMEBREW_PREFIX/bin" "$HOMEBREW_PREFIX/sbin" $path)
+fi
 
 # Remove duplicates and non-existent directories
 typeset -U path
 path=($^path(N-/))
 
 # ----------------------------------------------------------------------------
-# Homebrew & Package Manager Setup
+# Package Manager Setup (MacPorts or Homebrew)
 # ----------------------------------------------------------------------------
-if [[ -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
+if [[ "$PACKAGE_MANAGER" == "macports" ]]; then
+  [[ -f "$MACPORTS_PREFIX/share/asdf/asdf.sh" ]] && . "$MACPORTS_PREFIX/share/asdf/asdf.sh"
+  [[ -f "$MACPORTS_PREFIX/share/fzf/shell/completion.zsh" ]] && source "$MACPORTS_PREFIX/share/fzf/shell/completion.zsh"
+  [[ -f "$MACPORTS_PREFIX/share/fzf/shell/key-bindings.zsh" ]] && source "$MACPORTS_PREFIX/share/fzf/shell/key-bindings.zsh"
+
+  export FZF_BASE="$MACPORTS_PREFIX/bin/fzf"
+  fpath=(
+    "$MACPORTS_PREFIX/share/zsh/site-functions"
+    "${ASDF_DATA_DIR:-$HOME/.asdf}/completions"
+    $fpath
+  )
+elif [[ "$PACKAGE_MANAGER" == "homebrew" ]]; then
   eval "$("$HOMEBREW_PREFIX/bin/brew" shellenv)"
 
   # FZF setup
@@ -98,14 +113,6 @@ if [[ -x "$HOMEBREW_PREFIX/bin/brew" ]]; then
     "${ASDF_DIR}/completions"
     $fpath
   )
-else
-  # MacPorts fallback
-  [[ -f /opt/local/share/asdf/asdf.sh ]] && . /opt/local/share/asdf/asdf.sh
-  [[ -f /opt/local/share/fzf/shell/completion.zsh ]] && source /opt/local/share/fzf/shell/completion.zsh
-  [[ -f /opt/local/share/fzf/shell/key-bindings.zsh ]] && source /opt/local/share/fzf/shell/key-bindings.zsh
-
-  export FZF_BASE="/opt/local/bin/fzf"
-  fpath=("${ASDF_DATA_DIR:-$HOME/.asdf}/completions" $fpath)
 fi
 
 # ----------------------------------------------------------------------------
@@ -254,13 +261,16 @@ eval "$(ssh-agent -s)" &>/dev/null
 [[ -f ~/.bash_aliases ]] && source ~/.bash_aliases
 
 # bun completions
-[ -s "/Users/jacopog/.bun/_bun" ] && source "/Users/jacopog/.bun/_bun"
+[ -s "$HOME/.bun/_bun" ] && source "$HOME/.bun/_bun"
 
 # bun
 export BUN_INSTALL="$HOME/.bun"
 export PATH="$BUN_INSTALL/bin:$PATH"
 # The following lines have been added by Docker Desktop to enable Docker CLI completions.
-fpath=(/Users/jacopog/.docker/completions $fpath)
+fpath=($HOME/.docker/completions $fpath)
 autoload -Uz compinit
 compinit
 # End of Docker CLI completions
+
+# opencode
+export PATH=/Users/jacopo/.opencode/bin:$PATH
