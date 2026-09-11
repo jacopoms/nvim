@@ -3,12 +3,12 @@
   "transient_prompt": {
     "template": "<#ff79c6> {{ .Folder }}</> <p:yellow>❯</> ",
     "right_template": "{{ if .Executed }}<#6272a4> {{ .Segments.Executiontime.FormattedMs }}</>{{ end }}",
-    "foreground": "p:white",
+    "foreground": "#ffffff",
     "background": "transparent"
   },
   "secondary_prompt": {
     "template": "<p:yellow,transparent></><,p:yellow> > </><p:yellow,transparent></> ",
-    "foreground": "p:black",
+    "foreground": "#000000",
     "background": "transparent"
   },
   "upgrade": {
@@ -207,7 +207,7 @@
       "segments": [
         {
           "template": "❯ ",
-          "foreground": "p:yellow",
+          "foreground": "#383a42",
           "background": "transparent",
           "type": "text",
           "style": "plain"
@@ -223,8 +223,8 @@
       "leading_diamond": "",
       "trailing_diamond": "",
       "template": "  {{ .Profile }}{{ if .Region }}@{{ .Region }}{{ end }} ",
-      "foreground": "p:white",
-      "background": "p:orange",
+      "foreground": "#fafafa",
+      "background": "#ffa500",
       "type": "aws",
       "style": "diamond",
       "tips": ["aws"]
